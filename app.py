@@ -10,6 +10,7 @@ show_help = st.toggle("Show how it works", value=False)
 
 one_hour_high = st.number_input("Box High", value=0.0, step=0.25, format="%.2f")
 one_hour_low = st.number_input("Box Low", value=0.0, step=0.25, format="%.2f")
+actual_entry = st.number_input("Actual Entry Price", value=one_hour_high, step=0.25, format="%.2f")
 contracts = st.number_input("MNQ Contracts", min_value=1, value=1)
 
 if one_hour_high <= one_hour_low:
@@ -20,6 +21,7 @@ if show_help:
     st.info(
         "Enter box high/low and contracts. Targets extend the box (25/50/100%). "
         "Stops shrink relative to targets (12.5/25/50%). P&L uses $2 per MNQ point per contract. "
+        "You can also enter your actual fill to see P&L from that price to each target/stop. "
         "If the box range exceeds 100, consider the 25% or 50% targets for conservative moves."
     )
 
@@ -62,6 +64,21 @@ bearish_profit_100 = bullish_profit_100
 bearish_loss_25 = bullish_loss_25
 bearish_loss_50 = bullish_loss_50
 bearish_loss_100 = bullish_loss_100
+
+# P&L from actual entry (long and short)
+bull_entry_profit_25 = (bullish_tp_25 - actual_entry) * DOLLARS_PER_POINT * contracts
+bull_entry_profit_50 = (bullish_tp_50 - actual_entry) * DOLLARS_PER_POINT * contracts
+bull_entry_profit_100 = (bullish_tp_100 - actual_entry) * DOLLARS_PER_POINT * contracts
+bull_entry_loss_25 = (bullish_sl_25 - actual_entry) * DOLLARS_PER_POINT * contracts
+bull_entry_loss_50 = (bullish_sl_50 - actual_entry) * DOLLARS_PER_POINT * contracts
+bull_entry_loss_100 = (bullish_sl_100 - actual_entry) * DOLLARS_PER_POINT * contracts
+
+bear_entry_profit_25 = (actual_entry - bearish_tp_25) * DOLLARS_PER_POINT * contracts
+bear_entry_profit_50 = (actual_entry - bearish_tp_50) * DOLLARS_PER_POINT * contracts
+bear_entry_profit_100 = (actual_entry - bearish_tp_100) * DOLLARS_PER_POINT * contracts
+bear_entry_loss_25 = (actual_entry - bearish_sl_25) * DOLLARS_PER_POINT * contracts
+bear_entry_loss_50 = (actual_entry - bearish_sl_50) * DOLLARS_PER_POINT * contracts
+bear_entry_loss_100 = (actual_entry - bearish_sl_100) * DOLLARS_PER_POINT * contracts
 
 st.markdown(
     """
@@ -142,6 +159,23 @@ with pl_tab:
     with bear_rows[2]:
         st.metric("Profit @ 100% TP", f"${bearish_profit_100:.2f}")
         st.metric("Loss @ SL for 100% TP", f"${bearish_loss_100:.2f}")
+
+    st.markdown('<div class="section-card"><p class="section-title">P&L from Actual Entry</p><p class="section-note">Your fill price vs each target and stop.</p></div>', unsafe_allow_html=True)
+    entry_cols = st.columns(2)
+    with entry_cols[0]:
+        st.metric("Bullish Profit @ 25% TP", f"${bull_entry_profit_25:.2f}")
+        st.metric("Bullish Profit @ 50% TP", f"${bull_entry_profit_50:.2f}")
+        st.metric("Bullish Profit @ 100% TP", f"${bull_entry_profit_100:.2f}")
+        st.metric("Bullish Loss @ 25% TP Stop", f"${bull_entry_loss_25:.2f}")
+        st.metric("Bullish Loss @ 50% TP Stop", f"${bull_entry_loss_50:.2f}")
+        st.metric("Bullish Loss @ 100% TP Stop", f"${bull_entry_loss_100:.2f}")
+    with entry_cols[1]:
+        st.metric("Bearish Profit @ 25% TP", f"${bear_entry_profit_25:.2f}")
+        st.metric("Bearish Profit @ 50% TP", f"${bear_entry_profit_50:.2f}")
+        st.metric("Bearish Profit @ 100% TP", f"${bear_entry_profit_100:.2f}")
+        st.metric("Bearish Loss @ 25% TP Stop", f"${bear_entry_loss_25:.2f}")
+        st.metric("Bearish Loss @ 50% TP Stop", f"${bear_entry_loss_50:.2f}")
+        st.metric("Bearish Loss @ 100% TP Stop", f"${bear_entry_loss_100:.2f}")
 
 if box_range > 100:
     st.warning("Box range is over 100; consider using 25% or 50% levels for more conservative targets.")
